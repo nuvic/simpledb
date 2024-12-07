@@ -8,4 +8,4 @@ For each chapter's implementation, I will wrote a short blog post summarizing so
 
 ## Implementation and blog post
 
-- Chp3 File Manager
+- Chp3 File Manager: [branch](https://github.com/nuvic/simpledb/tree/chp3.file_manager) // [post](https://newvick.com/simpledb-one/)
