@@ -1,9 +1,7 @@
-use simpledb::{BlockId, SimpleDB};
+use simpledb::SimpleDB;
 
 fn main() -> std::io::Result<()> {
-    let db = SimpleDB::new("filetest", 400, 8)?;
-    let fm = db.file_manager();
-    let block = BlockId::new("testfile", 2);
+    let _db = SimpleDB::new("filetest", 400, 8)?;
 
     Ok(())
 }
