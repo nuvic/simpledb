@@ -55,12 +55,16 @@ impl Page {
     }
 
     // Similar to Java's contents() but returns mutable slice for direct writing
-    pub(crate) fn contents(&mut self) -> &mut [u8] {
+    pub fn contents(&mut self) -> &mut [u8] {
         &mut self.buffer[..]
     }
 
     pub fn length(&self) -> usize {
         self.buffer.len()
+    }
+
+    pub fn to_vec(&self) -> Vec<u8> {
+        self.buffer.clone()
     }
 }
 
