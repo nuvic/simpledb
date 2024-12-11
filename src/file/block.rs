@@ -1,3 +1,4 @@
+#[derive(Clone)]
 pub struct BlockId {
     filename: String,
     number: u64,
