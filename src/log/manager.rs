@@ -180,33 +180,33 @@ mod tests {
         let temp_dir = tempdir().unwrap();
         let db_dir = temp_dir.path().to_path_buf();
 
-        let mut db = SimpleDB::new(db_dir, 400, 8).unwrap();
+        let db = SimpleDB::new(db_dir, 400, 8).unwrap();
 
-        let lm = db.log_manager();
+        let mut lm = db.log_manager().lock().unwrap();
 
         // Test initial empty log
-        let records = print_log_records(lm);
+        let records = print_log_records(&mut lm);
         assert!(records.is_empty(), "Initial log should be empty");
 
         // Create first batch of records
-        let lsn1 = create_records(lm, 1, 35);
+        let lsn1 = create_records(&mut lm, 1, 35);
         assert_eq!(lsn1.len(), 35);
 
         // Verify first batch
-        let records = print_log_records(lm);
+        let records = print_log_records(&mut lm);
         assert_eq!(records.len(), 35);
         assert_eq!(records[0].0, "record35");
         assert_eq!(records[0].1, 135);
 
         // Create second batch of records
-        let lsns2 = create_records(lm, 36, 70);
+        let lsns2 = create_records(&mut lm, 36, 70);
         assert_eq!(lsns2.len(), 35);
 
         // Flush up to record 65
         lm.flush(65).unwrap();
 
         // Verify all records
-        let records = print_log_records(lm);
+        let records = print_log_records(&mut lm);
         assert_eq!(records.len(), 70);
         assert_eq!(records[0].0, "record70");
         assert_eq!(records[0].1, 170);
