@@ -1,10 +1,11 @@
-use crate::{file::FileManager, log::LogManager};
+use crate::{buffer::BufferManager, file::FileManager, log::LogManager};
 use std::path::Path;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 
 pub struct SimpleDB {
     fm: Arc<FileManager>,
-    lm: LogManager,
+    lm: Arc<Mutex<LogManager>>,
+    bm: BufferManager,
 }
 
 impl SimpleDB {
@@ -15,19 +16,27 @@ impl SimpleDB {
     pub fn new(
         dirname: impl AsRef<Path>,
         block_size: usize,
-        _buffer_size: u32,
+        buffer_size: u32,
     ) -> std::io::Result<SimpleDB> {
         let fm = Arc::new(FileManager::new(dirname, block_size)?);
-        let lm = LogManager::new(Arc::clone(&fm), Self::LOG_FILE.to_string())?;
+        let lm = Arc::new(Mutex::new(LogManager::new(
+            Arc::clone(&fm),
+            Self::LOG_FILE.to_string(),
+        )?));
+        let bm = BufferManager::new(Arc::clone(&fm), Arc::clone(&lm), buffer_size as usize);
 
-        Ok(SimpleDB { fm, lm })
+        Ok(SimpleDB { fm, lm, bm })
     }
 
     pub fn file_manager(&self) -> Arc<FileManager> {
         Arc::clone(&self.fm)
     }
 
-    pub fn log_manager(&mut self) -> &mut LogManager {
-        &mut self.lm
+    pub fn log_manager(&self) -> &Arc<Mutex<LogManager>> {
+        &self.lm
+    }
+
+    pub fn buffer_manager(&self) -> &BufferManager {
+        &self.bm
     }
 }
