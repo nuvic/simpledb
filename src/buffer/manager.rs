@@ -74,7 +74,7 @@ impl BufferManager {
     // Pins a buffer to the specified block, potentially
     // waiting until a buffer becomes available.
     // If no buffer becomes available within a fixed
-    // time period, then a {@link BufferAbortException} is thrown.
+    // time period, then a BufferError is thrown.
     pub fn pin(&self, block: BlockId) -> Result<Arc<Mutex<BufferPage>>, BufferError> {
         let deadline = Instant::now() + Duration::from_millis(self.max_time);
 
