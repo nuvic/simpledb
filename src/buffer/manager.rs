@@ -34,7 +34,12 @@ impl BufferManager {
         max_time: u64,
     ) -> Self {
         let buffer_pool = (0..num_buffs)
-            .map(|_| Arc::new(Mutex::new(BufferPage::new(fm.clone(), lm.clone()))))
+            .map(|_| {
+                Arc::new(Mutex::new(BufferPage::new(
+                    Arc::clone(&fm),
+                    Arc::clone(&lm),
+                )))
+            })
             .collect();
 
         BufferManager {
@@ -117,24 +122,26 @@ impl BufferManager {
     }
 
     fn find_existing_buffer(&self, block: &BlockId) -> Option<Arc<Mutex<BufferPage>>> {
-        self.buffer_pool
-            .iter()
-            .find(|buff| {
-                let buffer = buff.lock().unwrap();
-                buffer.block().map_or(false, |b| b == block)
-            })
-            .cloned()
+        self.buffer_pool.iter().find_map(|buff| {
+            let buffer = buff.lock().unwrap();
+            if buffer.block().map_or(false, |b| b == block) {
+                Some(Arc::clone(buff))
+            } else {
+                None
+            }
+        })
     }
 
     // Naive implementation
     fn choose_unpinned_buffer(&self) -> Option<Arc<Mutex<BufferPage>>> {
-        self.buffer_pool
-            .iter()
-            .find(|buff| {
-                let buffer = buff.lock().unwrap();
-                !buffer.is_pinned()
-            })
-            .cloned()
+        self.buffer_pool.iter().find_map(|buff| {
+            let buffer = buff.lock().unwrap();
+            if !buffer.is_pinned() {
+                Some(Arc::clone(buff))
+            } else {
+                None
+            }
+        })
     }
 }
 
@@ -147,7 +154,7 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let fm = Arc::new(FileManager::new(temp_dir.path(), 400).unwrap());
         let lm = Arc::new(Mutex::new(
-            LogManager::new(fm.clone(), "test.log".to_string()).unwrap(),
+            LogManager::new(Arc::clone(&fm), "test.log".to_string()).unwrap(),
         ));
         (temp_dir, fm, lm)
     }
@@ -155,7 +162,7 @@ mod tests {
     #[test]
     fn test_buffer_pinning() {
         let (_temp_dir, fm, lm) = setup();
-        let mut bm = BufferManager::new_with_timeout(fm.clone(), lm.clone(), 3, 100);
+        let mut bm = BufferManager::new_with_timeout(Arc::clone(&fm), Arc::clone(&lm), 3, 100);
 
         assert_eq!(bm.available(), 3, "All buffers should be available");
 
@@ -185,7 +192,7 @@ mod tests {
     #[test]
     fn test_buffer_pin_timeout() {
         let (_temp_dir, fm, lm) = setup();
-        let bm = BufferManager::new_with_timeout(fm.clone(), lm.clone(), 3, 100);
+        let bm = BufferManager::new_with_timeout(Arc::clone(&fm), Arc::clone(&lm), 3, 100);
 
         assert_eq!(bm.available(), 3, "All buffers should be available");
 

@@ -103,7 +103,7 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let fm = Arc::new(FileManager::new(temp_dir.path(), 400).unwrap());
         let lm = Arc::new(Mutex::new(
-            LogManager::new(fm.clone(), "test.log".to_string()).unwrap(),
+            LogManager::new(Arc::clone(&fm), "test.log".to_string()).unwrap(),
         ));
         (fm, lm, temp_dir)
     }
@@ -119,7 +119,7 @@ mod tests {
         let (fm, lm, _temp_dir) = setup();
         init_file(&fm, "testfile", 1)?;
 
-        let mut buffer = BufferPage::new(fm.clone(), lm.clone());
+        let mut buffer = BufferPage::new(Arc::clone(&fm), Arc::clone(&lm));
 
         // Test initial state
         assert!(!buffer.is_pinned());
@@ -160,7 +160,7 @@ mod tests {
         let (fm, lm, _temp_dir) = setup();
         init_file(&fm, "testfile", 1)?;
 
-        let mut buffer = BufferPage::new(fm.clone(), lm.clone());
+        let mut buffer = BufferPage::new(Arc::clone(&fm), Arc::clone(&lm));
         let block = BlockId::new("testfile".to_string(), 1);
 
         buffer.assign_to_block(block.clone())?;
